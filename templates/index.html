@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+	<title>Blog Mini - kidOYO</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<style>
+	#postBody {
+		resize: none;
+	}
+	#feed > .panel {
+		padding-right: 0px;
+		padding-left: 0px;
+	}
+    .flash {
+        position: relative;
+        z-index: 50;
+        margin: 0 auto;
+    }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Blog Application</h1>
+		<!-- For creating new posts -->
+		<form id="blogForm" class="col-xs-12 col-sm-12 col-md-6">
+			<div class="postTitle form-group">
+				<label for="postTitle">Post Title</label>
+				<input type="text" class="form-control" name="postTitle" id="postTitle" placeholder="Title">
+			</div>
+			<div class="postBody form-group">
+				<label for="postBody">Post Body</label>
+				<textarea class="form-control" name="postBody" id="postBody" rows="10"></textarea>
+			</div>
+			<button type="submit" class="btn btn-default">Save</button>
+		</form>
+
+		<!-- Post feed -->
+		<div id="feed" class="col-xs-12 col-sm-12 col-md-6">
+            {% for post in posts %}
+            <div data-post_id="{{ post._id }}" class="post panel panel-default col-xs-12 col-sm-12 col-md-10 col-md-offset-1 post-container">
+				<div class="panel-heading">
+                    <div class="panel-title post-title">{{post.title}}<span class="removeIcon glyphicon glyphicon-remove pull-right"></span></div>
+                </div>
+                <div class="panel-body post-body">{{post.body}}
+				</div>
+            </div>
+            {% endfor %}
+		</div>
+	</div>
+	<!-- jQuery CDN -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<script src="./static/js/blog.js"></script>
+</body>
+</html>
