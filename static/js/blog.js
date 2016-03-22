@@ -39,7 +39,7 @@ $(document).ready(function() {
                             '</button>',
                         '</div>'
                     ].join("");
-                    $('.container').append(msg);
+                    $('.container').prepend(msg);
                     resp = $.parseJSON(resp);
                     addToFeed(resp.post_id, resp.title, resp.body);
                 };
@@ -81,7 +81,7 @@ $(document).ready(function() {
                         '</button>',
                     '</div>'
                 ].join("");
-                $('.container').append(msg);
+                $('.container').prepend(msg);
                 post.remove();
             };
         $.post(url, args, callback);
@@ -111,6 +111,6 @@ function addToFeed(post_id, title, body) {
         '</div>'
     ].join("");
 
-	$('#feed').prepend(msg);
+	$('#feed').append(msg);
 	clearInputs();
 }
