@@ -27,6 +27,12 @@ def render_template(template_name, **context):
     #jinja_env.update_template_context(context)
     return jinja_env.get_template(template_name).render(context)
 
+def validate(post_id, post_title, post_body):
+    return {
+            "_id": post_id,
+            "title": cgi.escape(post_title),
+            "body": cgi.escape(post_body)
+            }
 
 class index:
     def GET(self):
@@ -38,6 +44,12 @@ class index:
         """
         try:
             posts = db.posts.find()
+            posts = filter(lambda post:
+                not None in (post.get('_id'), post.get('title'), post.get('body')),
+                posts)
+            posts = map(lambda post:
+                validate(post.get('_id'), post.get('title'), post.get('body')),
+                posts)
         except Exception as e:
             print e
             posts = []
@@ -66,11 +78,14 @@ class index:
         }
 
         try:
-            post_id=db.posts.insert_one(post).inserted_id
+            post_id = db.posts.insert_one(post).inserted_id
         except Exception as e:
             print e
             return json.dumps({'status': 'error'})
-        return json.dumps({'status': 'success', 'post_id': str(post_id), 'title': title, 'body': body})
+        valid_post = validate(post_id, title, body)
+        return json.dumps({'status': 'success',
+            'post_id': str(valid_post.get('_id')), 'title': valid_post.get('title'),
+            'body': valid_post.get('body')})
 
 
 class PostDel:
