@@ -37,10 +37,10 @@ class index:
             render_template: Renders index.html template and list of posts.
         """
         try:
-            posts=db.posts.find()
+            posts = db.posts.find()
         except Exception as e:
             print e
-            posts=[]
+            posts = []
         return render_template('index.html', posts=posts)
 
 
@@ -54,9 +54,12 @@ class index:
         Returns:
             json: Returns JSON object with the keys: success and post_id.
         """
-        inp=web.input()
-        title=cgi.escape(inp['postTitle'])
-        body=cgi.escape(inp['postBody'])
+        inp = web.input()
+        title, body = inp.get('postTitle'), inp.get('postBody')
+        if None in (title, body):
+            return json.dumps({'status': 'error'})
+        if len(title) == 0 or len(body) == 0:
+            return json.dumps({'status': 'error'})
         post = {
             'title': title,
             'body': body
@@ -80,12 +83,16 @@ class PostDel:
         Returns:
             json: Returns JSON object with the success message.
         """
-        inp=web.input()
-        post_id=cgi.escape(inp['post_id'])
+        inp = web.input()
+        post_id = inp.get('post_id')
+
+        if post_id is None:
+            return json.dumps({'status': 'error'})
+        if len(post_id) == 0:
+            return json.dumps({'status': 'error'})
 
         try:
-
-            result=db.posts.delete_one({'_id': ObjectId(post_id)})
+            result = db.posts.delete_one({'_id': ObjectId(post_id)})
             if result.deleted_count != 1:
                 raise Exception('One document was not deleted.')
         except Exception as e:
