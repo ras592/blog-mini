@@ -63,14 +63,9 @@ var blog = (function() {
 
     function init() {
         // make request for JSON
-        /*var tempObj1 = {"postId": "1234", "postTitle": "Hello", "postBody": "World!"};
-        var tempObj2 = {"postId": "1235", "postTitle": "Another Hello", "postBody": "<i>World!</i>"};
-        _addToPosts(tempObj1.postId, tempObj1.postTitle, tempObj1.postBody);
-        _addToPosts(tempObj2.postId, tempObj2.postTitle, tempObj2.postBody);*/
         var url = "./post",
             args = {},
             callback = function (resp) {
-                console.log(resp);
                 resp = $.parseJSON(resp);
                 resp = resp.posts;
                 resp.forEach( function(post) {
@@ -84,10 +79,8 @@ var blog = (function() {
         var post;
         var errors = [];
         if(value.hasOwnProperty("postTitle") && value.hasOwnProperty("postBody")) {
-                console.log("Executing inside value passed to API");
                 post = {"postTitle": value.postTitle, "postBody": value.postBody};
         } else {
-            console.log("Executing inside value in form.");
             post = {
                 "postTitle": $.trim($postTitle.val()),
                 "postBody": $.trim($postBody.val())
@@ -109,14 +102,12 @@ var blog = (function() {
         console.log(errors.length);
 
         if(errors.length === 0) {
-            console.log("Cleared errors");
             var url = "./post",
                 args = {
                     "postTitle": post.postTitle,
                     "postBody": post.postBody
                 },
                 callback = function (resp) {
-                    console.log(resp);
                     $container.prepend(uploadMsg);
                     resp = $.parseJSON(resp);
                     resp = resp.post;
@@ -145,8 +136,6 @@ var blog = (function() {
             var $remove = $(e.target).closest('.post-container');
             postId = $remove.attr('data-post_id');
             i = $feed.find('.post').index($remove);
-            console.log($remove);
-            console.log(postId);
         }
 
         var url = "./postDel",
