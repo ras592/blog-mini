@@ -17,6 +17,12 @@
         z-index: 50;
         margin: 0 auto;
     }
+	#postTitleError {
+		display: none;
+	}
+	#postBodyError {
+		display: none;
+	}
 	</style>
 </head>
 <body>
@@ -27,31 +33,39 @@
 			<div class="postTitle form-group">
 				<label for="postTitle">Post Title</label>
 				<input type="text" class="form-control" name="postTitle" id="postTitle" placeholder="Title">
+				<div id="postTitleError" class="alert alert-danger">Title wasn't given.</div>
 			</div>
 			<div class="postBody form-group">
 				<label for="postBody">Post Body</label>
 				<textarea class="form-control" name="postBody" id="postBody" rows="10"></textarea>
+				<div id="postBodyError" class="alert alert-danger">Body wasn't given.</div>
 			</div>
-			<button type="submit" class="btn btn-default">Save</button>
+			<button type="button" class="btn btn-default">Save</button>
 		</form>
 
 		<!-- Post feed -->
 		<div id="feed" class="col-xs-12 col-sm-12 col-md-6">
-            {% for post in posts %}
-            <div data-post_id="{{ post._id }}" class="post panel panel-default col-xs-12 col-sm-12 col-md-10 col-md-offset-1 post-container">
-				<div class="panel-heading">
-                    <div class="panel-title post-title">{{post.title}}<span class="removeIcon glyphicon glyphicon-remove pull-right"></span></div>
-                </div>
-                <div class="panel-body post-body">{{post.body}}
-				</div>
-            </div>
-            {% endfor %}
+			{% raw %}
+			<script id="postTemplate" type="text/template">
+	            {{#posts}}
+	            <div data-post_id="{{ postId }}" class="post panel panel-default col-xs-12 col-sm-12 col-md-10 col-md-offset-1 post-container">
+					<div class="panel-heading">
+	                    <div class="panel-title post-title">{{postTitle}}<span class="removeIcon glyphicon glyphicon-remove pull-right"></span></div>
+	                </div>
+	                <div class="panel-body post-body">{{postBody}}
+					</div>
+	            </div>
+	            {{/posts}}
+			</script>
+			{% endraw %}
 		</div>
 	</div>
 	<!-- jQuery CDN -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<!-- Mustache.js -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
 	<script src="./static/js/blog.js"></script>
 </body>
 </html>

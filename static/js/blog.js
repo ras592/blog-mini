@@ -1,47 +1,127 @@
-$(document).ready(function() {
-	$('#blogForm').submit(function(event) {
-		event.preventDefault();
-		var title = $.trim($('#postTitle').val());
-		var body = $.trim($('#postBody').val());
-		var errors = [];
-		if(!title.length) {
-			// title wasn't given
-			if(!$('#postTitleError').length) {
-				$('.postTitle').append($(document.createElement('div'))
-					.addClass('alert alert-danger').attr('id', 'postTitleError')
-					.text("Title wasn't given."));
-			}
-			errors.push('No title');
-		}
-		if(!body.length) {
-			// body wasn't given
-			if(!$('#postBodyError').length) {
-				$('.postBody').append($(document.createElement('div'))
-					.addClass('alert alert-danger').attr('id', 'postBodyError')
-					.text("Body wasn't given."));
-			}
-			errors.push('No body');
-		}
+var blog = (function() {
+    var posts = [];
 
-		if(errors.length === 0) {
-            var url = "./",
+    // cache DOM
+    var $container = $('.container');
+    var $feed = $('#feed');
+    var $blogFormButton = $('#blogForm button');
+    var $postTitle = $('#postTitle');
+    var $postBody = $('#postBody');
+    var $postTitleForm = $('.postTitle');
+    var $postBodyForm = $('.postBody');
+    var $postTitleError = $('#postTitleError');
+    var $postBodyError = $('#postBodyError');
+    var template = $feed.find('#postTemplate').html();
+
+    var uploadMsg = [
+        '<div class="flash alert alert-dismissible alert-success" role="alert">',
+            '<strong>Successfully uploaded!</strong>',
+            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">',
+                '<span aria-hidden="true">&times;</span>',
+            '</button>',
+        '</div>'
+    ].join("");
+
+    var removeMsg = [
+        '<div class="flash alert alert-dismissible alert-success" role="alert">',
+            '<strong>Successfully removed!</strong>',
+            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">',
+                '<span aria-hidden="true">&times;</span>',
+            '</button>',
+        '</div>'
+    ].join("");
+
+    // bind events
+    $blogFormButton.on('click', addToFeed);
+    $feed.delegate('.removeIcon', 'click', deleteFromFeed);
+    $postTitle.focus(_removePostTitleError);
+    $postBody.focus(_removePostBodyError);
+
+    _render();
+
+    function _render() {
+        $feed.html(Mustache.render(template, {posts: posts}));
+    }
+
+    function _clearInputs() {
+        $postTitle.val('');
+        $postBody.val('');
+    }
+
+    function _removePostTitleError() {
+        $postTitleError.hide();
+    }
+
+    function _removePostBodyError() {
+        $postBodyError.hide();
+    }
+
+    function _addToPosts(postId, postTitle, postBody) {
+        posts.push({"postId": postId, "postTitle": postTitle, "postBody": postBody});
+        _render();
+    }
+
+    function init() {
+        // make request for JSON
+        /*var tempObj1 = {"postId": "1234", "postTitle": "Hello", "postBody": "World!"};
+        var tempObj2 = {"postId": "1235", "postTitle": "Another Hello", "postBody": "<i>World!</i>"};
+        _addToPosts(tempObj1.postId, tempObj1.postTitle, tempObj1.postBody);
+        _addToPosts(tempObj2.postId, tempObj2.postTitle, tempObj2.postBody);*/
+        var url = "./post",
+            args = {},
+            callback = function (resp) {
+                console.log(resp);
+                resp = $.parseJSON(resp);
+                resp = resp.posts;
+                resp.forEach( function(post) {
+                    _addToPosts(post.postId, post.postTitle, post.postBody);
+                });
+            };
+        $.get(url, args, callback);
+    }
+
+    function addToFeed(value) {
+        var post;
+        var errors = [];
+        if(value.hasOwnProperty("postTitle") && value.hasOwnProperty("postBody")) {
+                console.log("Executing inside value passed to API");
+                post = {"postTitle": value.postTitle, "postBody": value.postBody};
+        } else {
+            console.log("Executing inside value in form.");
+            post = {
+                "postTitle": $.trim($postTitle.val()),
+                "postBody": $.trim($postBody.val())
+            };
+        }
+
+        if(post.postTitle.length === 0) {
+            // title wasn't given
+            $postTitleError.show();
+            errors.push('No title');
+        }
+
+        if(post.postBody.length === 0) {
+            // body wasn't given
+            $postBodyError.show();
+            errors.push('No body');
+        }
+
+        console.log(errors.length);
+
+        if(errors.length === 0) {
+            console.log("Cleared errors");
+            var url = "./post",
                 args = {
-                    "postTitle": title,
-                    "postBody": body
+                    "postTitle": post.postTitle,
+                    "postBody": post.postBody
                 },
                 callback = function (resp) {
                     console.log(resp);
-                    var msg = [
-                        '<div class="flash alert alert-dismissible alert-success" role="alert">',
-                            '<strong>Successfully uploaded!</strong>',
-                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">',
-                                '<span aria-hidden="true">&times;</span>',
-                            '</button>',
-                        '</div>'
-                    ].join("");
-                    $('.container').prepend(msg);
+                    $container.prepend(uploadMsg);
                     resp = $.parseJSON(resp);
-                    addToFeed(resp.post_id, resp.title, resp.body);
+                    resp = resp.post;
+                    _addToPosts(resp.postId, resp.postTitle, resp.postBody);
+                    _clearInputs();
                 };
             $.post(url, args, callback);
 		} else {
@@ -49,68 +129,44 @@ $(document).ready(function() {
 				console.log(e);
 			});
 		}
-	});
+    }
 
-	// on focus removal of no title error
-	$('input#postTitle').focus(function(event) {
-		$('#postTitleError').remove();
-	});
-
-	// on focus removal of no body error
-	$('textarea#postBody').focus(function(event) {
-		$('#postBodyError').remove();
-	});
-
-	// on click removal of posts
-
-    $("#feed").on("click", "span.removeIcon", function () {
-        var post = $(this).closest(".post-container"),
-            post_id = post.attr("data-post_id");
+    function deleteFromFeed(e) {
+        // either an index value or an event object
+        var i, postId;
+        if(typeof e === "number") {
+            i = e;
+            if(i >= 0 && i < posts.length) {
+                postId = posts[i].postId;
+            } else {
+                return;
+            }
+        } else {
+            var $remove = $(e.target).closest('.post-container');
+            postId = $remove.attr('data-post_id');
+            i = $feed.find('.post').index($remove);
+            console.log($remove);
+            console.log(postId);
+        }
 
         var url = "./postDel",
             args = {
-                "post_id": post_id,
+                "postId": postId,
             },
             callback = function (resp) {
                 console.log(resp);
-                var msg = [
-                    '<div class="flash alert alert-dismissible alert-success" role="alert">',
-                        '<strong>Successfully removed!</strong>',
-                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">',
-                            '<span aria-hidden="true">&times;</span>',
-                        '</button>',
-                    '</div>'
-                ].join("");
-                $('.container').prepend(msg);
-                post.remove();
+                $container.prepend(removeMsg);
+                posts.splice(i, 1);
+                _render();
             };
         $.post(url, args, callback);
+    }
 
-    });
-});
+    return {
+        init: init,
+        addToFeed: addToFeed,
+        deleteFromFeed: deleteFromFeed
+    };
+})();
 
-function clearInputs() {
-	$('#postTitle').val("");
-	$('#postBody').val("");
-}
-
-function addToFeed(post_id, title, body) {
-
-    var msg = [
-        '<div data-post_id="' + post_id + '" class="post panel panel-default col-xs-12 col-sm-12 col-md-10 col-md-offset-1 post-container">',
-            '<div class="panel-heading">',
-                '<div class="panel-title post-title">',
-                    title,
-                    '<span class="removeIcon glyphicon glyphicon-remove pull-right">',
-                    '</span>',
-                '</div>',
-            '</div>',
-            '<div class="panel-body post-body">',
-                body,
-            '</div>',
-        '</div>'
-    ].join("");
-
-	$('#feed').append(msg);
-	clearInputs();
-}
+blog.init();

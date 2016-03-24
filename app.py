@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 
 urls = (
     '/', 'index',
+    '/post', 'Post',
     '/postDel', 'PostDel'
 )
 
@@ -29,12 +30,16 @@ def render_template(template_name, **context):
 
 def validate(post_id, post_title, post_body):
     return {
-            "_id": post_id,
-            "title": cgi.escape(post_title),
-            "body": cgi.escape(post_body)
+            "postId": str(post_id),
+            "postTitle": post_title,
+            "postBody": post_body
             }
 
 class index:
+    def GET(self):
+        return render_template('index.html')
+
+class Post:
     def GET(self):
         """Handles GET method for index route.
         Query mongodb for posts or handle exceptions and send back an empty list.
@@ -53,7 +58,7 @@ class index:
         except Exception as e:
             print e
             posts = []
-        return render_template('index.html', posts=posts)
+        return json.dumps({"status": "success", "posts": posts})
 
 
     def POST(self):
@@ -83,10 +88,12 @@ class index:
             print e
             return json.dumps({'status': 'error'})
         valid_post = validate(post_id, title, body)
-        return json.dumps({'status': 'success',
-            'post_id': str(valid_post.get('_id')), 'title': valid_post.get('title'),
-            'body': valid_post.get('body')})
+        return json.dumps({'status': 'success', 'post': valid_post})
 
+# Make a second url just for getting and posting posts
+# That way you get all post data from /post GET
+# Add new post data from /post POST
+# Remove any post data from /postDel POST
 
 class PostDel:
     def POST(self):
@@ -99,7 +106,7 @@ class PostDel:
             json: Returns JSON object with the success message.
         """
         inp = web.input()
-        post_id = inp.get('post_id')
+        post_id = inp.get('postId')
 
         if post_id is None:
             return json.dumps({'status': 'error'})
